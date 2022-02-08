@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using dotnet_rpg.Models;
+using dotnet_rpg.Services.CharacterService;
 namespace dotnet_rpg.Controllers
 {
     /*
@@ -12,10 +13,23 @@ namespace dotnet_rpg.Controllers
     [Route("[controller]")] /* it means that this controller can be accessed by its name, in our case Character*/
     public class CharacterController : ControllerBase{
         //private static Character knight = new Character(); /* instance from the character class in the Models*/
-        private static List<Character> characters = new List<Character> {
-            new Character(),
-            new Character {ID = 1 , Name = "Momen"}
-        };
+        /* constructor*/
+
+        private readonly ICharacterService _characterService; /* new private field we inject our service to the controller*/
+                                                              /* here we use dependency injection */
+                                                              /* 
+                                                              * Dependency injection: you are able to use the same
+                                                              * services in several controllers and if you want to
+                                                              * change the actual implementation of a service, you just
+                                                              * change one service class 
+                                                              */         
+        public CharacterController(ICharacterService characterService){
+            _characterService = characterService;
+        }
+        // private static List<Character> characters = new List<Character> {
+        //     new Character(),
+        //     new Character {ID = 1 , Name = "Momen"}
+        // };
         /*
         enables us to send specific HTTP status code back to the client 
         together with the actual data that was requested 
@@ -42,20 +56,19 @@ namespace dotnet_rpg.Controllers
         [Route("GetAll")]
 
         /* or [HttpGet("GetAll")]*/
-        public ActionResult<List<Character>>Get(){
-            return Ok(characters); /* 200 status*/
+        public async Task<ActionResult<ServiceResponse<List<Character>>>>Get(){
+            return Ok(await _characterService.GetAllCharacters()); /* 200 status*/
         }
         // [HttpGet]
 
         [HttpGet("{id}")] /* this is used in case we want to return the character with a specific ID*/
-        public ActionResult<List<Character>>GetSingle(int id){
-            return Ok(characters.FirstOrDefault(c => c.ID == id)); /* 200 status*/
+        public async Task<ActionResult<ServiceResponse<List<Character>>>>GetSingle(int id){
+            return Ok(await _characterService.GetCharacterById(id)); /* 200 status*/
         }
 
         [HttpPost] // send data
-        public ActionResult<List<Character >> AddCharacter(Character newCharacter){
-            characters.Add(newCharacter);
-            return Ok(characters);
+        public async Task<ActionResult<ServiceResponse<List<Character >>>> AddCharacter(Character newCharacter){ 
+            return Ok(await _characterService.AddCharacter(newCharacter));
         }
 
     }
